@@ -7,12 +7,21 @@ var app = express();
 // Add static files location
 app.use(express.static("static"));
 
+// Use the Pug templating engine
+app.set('view engine', 'pug');
+app.set('views', './app/views');
+
+
 // Get the functions in the db.js file to use
 const db = require('./services/db');
 
 // Create a route for root - /
 app.get("/", function(req, res) {
-    res.send('Hello world');
+     // Set up an array of data
+     var test_data = ['one', 'two', 'three', 'four'];
+     // Send the array through to the template as a variable called data
+     res.render("index", {'title':'My index page', 
+           'heading':'My heading', 'data':test_data});
 });
 
 // Task 1 JSON formatted listing of students
@@ -34,16 +43,8 @@ app.get("/all-students-formatted", function(req, res) {
     // As we are not inside an async function we cannot use await
     // So we use .then syntax to ensure that we wait until the 
     // promise returned by the async function is resolved before we proceed
-    var output = '<table border="1px">';
     db.query(sql).then(results => {
-        for (var row of results) {
-            output += '<tr>';
-            output += '<td>' + row.id + '</td>';
-            output += '<td>' + '<a href="./single-student/' + row.id + '">' + row.name + '</a>' + '</td>';
-            output += '</tr>'
-        }
-        output+= '</table>';
-        res.send(output);
+        res.render('all-students', {data:results});
     });
 });
 
