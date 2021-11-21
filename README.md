@@ -1,16 +1,14 @@
 # MySQL, PHPMyAdmin and Node.js (ready for Express development)
 
-This will install Mysql and phpmyadmin (including all dependencies to run Phpmyadmin) AND node.js
+This will install Mysql and phpmyadmin (including all dependencies to run Phpmyadmin) AND node.js, and will follow the lab exercises for software development 2.
 
-This receipe is for development - Node.js is run in nodemon mode: changes to files with suffixes specified in the nodemon.json file will trigger a rebuild automatically.
-
-For security, this receipe uses a .env file for credentials.  A sample is provided in the env-sample file. If using these files for a fresh project, copy the env-sample file to a file called .env.  Do NOT commit the changed .env file into your new project for security reasons (in the node package its included in .gitignore so you can't anyway)
+For security, this project uses a .env file for credentials.  A sample is provided in the env-sample file. If using these files for a fresh project, copy the env-sample file to a file called .env.  Do NOT commit the changed .env file into your new project for security reasons (in the node package its included in .gitignore so you can't anyway)
 
 In node.js, use the MySQl2 packages (to avoid problems with MySQL8) and the dotenv package to read the environment variables.
 
 Local files are mounted into the container using the 'volumes' directive in the docker-compose.yml for ease of development.
 
-Summary: to start a new project:
+Summary: to run this project:
 
 0. Ensure Docker is installed (with Docker compose, but on Windows and Mac this is included with the main Docker packages)
 1. Copy all the files (including hidden ones ie. those starting wtih a .) into a fresh directory
