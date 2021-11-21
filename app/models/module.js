@@ -3,9 +3,9 @@ const db = require('../services/db');
 
 class Module {
     // Module code
-    #code;
+    code;
     // Module name
-    #name;
+    name;
 
     constructor(code, name) {
         this.code = code;
