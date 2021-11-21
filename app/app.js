@@ -12,7 +12,7 @@ const db = require('./services/db');
 
 // Create a route for root - /
 app.get("/", function(req, res) {
-    res.sendStatus('Hello world');
+    res.send('Hello world');
 });
 
 // Task 1 JSON formatted listing of students
