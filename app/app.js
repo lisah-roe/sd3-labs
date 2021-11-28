@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: true }))
 
 // Get the models
 const { Student } = require("./models/student");
+const programmes = require("./models/programmes");
 
 
 // Create a route for root - /
@@ -62,12 +63,27 @@ app.get("/single-student/:id", function (req, res) {
         Promise => {
             student.getStudentProgramme().then(Promise => {
                 student.getStudentModules().then(Promise => {
-                    res.render('student', { student: student });
+                    programmes.getAllProgrammes().then(resultProgs => {
+                        res.render('student', { 'student': student, 'programmes': resultProgs });
+                    });
                 });
             });
         });
 });
 
+// A post route to recieve new data for a students' programme
+app.post('/allocate-programme', function (req, res) {
+    params = req.body;
+    var student = new Student(params.id)
+    // Adding a try/catch block which will be useful later when we add to the database
+    try {
+        student.updateStudentProgramme(params.programme).then(result => {
+            res.redirect('/single-student/' + params.id);
+        })
+     } catch (err) {
+         console.error(`Error while adding programme `, err.message);
+     }
+});
 
 app.post('/add-note', function (req, res) {
     params = req.body;
@@ -81,6 +97,7 @@ app.post('/add-note', function (req, res) {
          console.error(`Error while adding note `, err.message);
      }
 });
+
 
 
 //Independent task 1: JSON output of all programmes

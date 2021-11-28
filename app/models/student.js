@@ -23,7 +23,6 @@ class Student {
         if (typeof this.name !== 'string') {
             var sql = "SELECT * from Students where id = ?"
             const results = await db.query(sql, [this.id]);
-            console.log(results);
             this.name = results[0].name;
             this.note = results[0].note;
         }
@@ -37,6 +36,7 @@ class Student {
             WHERE sp.id = ?"
             const results = await db.query(sql, [this.id]);
             this.programme = new Programme(results[0].programme, results[0].name);
+            return this.programme;
         }
     }
 
@@ -55,6 +55,31 @@ class Student {
         const result = await db.query(sql, [note, this.id]);
         // Ensure the note property in the model is up to date
         this.note = note;
+        return result;
+    }
+
+    async updateStudentProgramme(programme) {
+        const existing  = await this.getStudentProgramme();
+        console.log(existing);
+        if(this.programme) {
+            await this.deleteStudentProgramme(programme);
+        }
+        await this.addStudentProgramme(programme);
+    }
+
+    async deleteStudentProgramme(programme) {
+        var sql = "DELETE FROM Student_Programme WHERE id = ?";
+        const result = await db.query(sql, [this.id]);
+        // Ensure the note property in the model is up to date
+        this.programme = '';
+        return result;
+    }
+
+    async addStudentProgramme(programme) {
+        var sql = "INSERT INTO Student_Programme (id, programme) VALUES (?, ?)";
+        const result = await db.query(sql, [this.id, programme]);
+        // Ensure the note property in the model is up to date
+        this.programme = programme;
         return result;
     }
 }
