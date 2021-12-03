@@ -17,13 +17,12 @@ app.use(express.urlencoded({ extended: true }))
 
 // Set the sessions
 var session = require('express-session');
-app.set('trust proxy', 1) // trust first proxy
 app.use(session({
-  secret: 'xxxyyy',
+  secret: 'secretkeysdfjsflyoifasd',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false }
-}))
+}));
 
 // Get the models
 const { Student } = require("./models/student");
@@ -122,14 +121,16 @@ app.post('/set-password', function (req, res) {
     try {
         user.getIdFromEmail().then( uId => {
             if(uId) {
+                 // If a valid, existing user is found, set the password and redirect to the users single-student page
                 user.setUserPassword(params.password).then ( result => {
-                 //   req.flash('Password upated');
                     res.redirect('/single-student/' + uId);
                 });
             }
             else {
-               // req.flash('No email found');
-                res.send('invalid email');
+                // If no existing user is found, add a new one
+                user.addUser(params.email).then( Promise => {
+                    res.send('Perhaps a page where a new user sets a programme would be good here');
+                });
             }
         })
      } catch (err) {
@@ -137,18 +138,13 @@ app.post('/set-password', function (req, res) {
      }
 });
 
-// Login
+// Login Form
 app.get('/login', function (req, res) {
     res.render('login');
 });
 
-// Logout
-app.get('/logout', function (req, res) {
-    req.session.destroy();
-    res.redirect('/login');
-  });
 
-// Check a submitted creds
+// Check submitted email and password pair
 app.post('/authenticate', function (req, res) {
     params = req.body;
     var user = new User(params.email);
@@ -156,14 +152,14 @@ app.post('/authenticate', function (req, res) {
         user.getIdFromEmail().then(uId => {
             if (uId) {
                 user.authenticate(params.password).then(match => {
-                    console.log(Promise);
                     if (match) {
                         req.session.uid = uId;
                         req.session.loggedIn = true;
+                        console.log(req.session);
                         res.redirect('/single-student/' + uId);
                     }
                     else {
-                        // req.flash('No email found');
+                        // TODO improve the user journey here
                         res.send('invalid password');
                     }
                 });
@@ -176,6 +172,13 @@ app.post('/authenticate', function (req, res) {
         console.error(`Error while comparing `, err.message);
     }
 });
+
+// Logout
+app.get('/logout', function (req, res) {
+    req.session.destroy();
+    res.redirect('/login');
+  });
+
 
 
 //Independent task 1: JSON output of all programmes
