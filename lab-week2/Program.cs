@@ -20,5 +20,19 @@ class Program
         foreach (IShape s in shapes) {
             Console.WriteLine($"{s.GetType()} has perimeter {s.getPerimeter()} and area {s.getArea()}");
         }
+
+        // Now lets make a zoo
+        Zoo zoo = new Zoo();
+
+        // Add a lion
+        zoo.addAnimal(new Lion("Elsa"));
+        zoo.addAnimal(new Elephant("Elmer"));
+        zoo.addAnimal(new Elephant("George"));
+        zoo.addAnimal(new Lion("Walter"));
+
+        zoo.listAnimals();
+
+        zoo.feedAnimals();
+        
     }
 }
