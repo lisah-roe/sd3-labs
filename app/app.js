@@ -32,7 +32,7 @@ const { User } = require("./models/user");
 
 // Create a route for root - /
 app.get("/", function(req, res) {
-    console.log(req.session);
+    console.log(req.session.uid);
     if (req.session.uid) {
 		res.send('Welcome back, ' + req.session.uid + '!');
 	} else {
@@ -66,44 +66,38 @@ app.get("/all-students-formatted", function(req, res) {
 });
 
 // Task 3 single student page
-app.get("/single-student/:id", function (req, res) {
+app.get("/single-student/:id", async function (req, res) {
     var stId = req.params.id;
     // Create a student class with the ID passed
     var student = new Student(stId);
-    student.getStudentDetails().then(
-        Promise => {
-            student.getStudentProgramme().then(Promise => {
-                student.getStudentModules().then(Promise => {
-                    programmes.getAllProgrammes().then(resultProgs => {
-                        res.render('student', { 'student': student, 'programmes': resultProgs });
-                    });
-                });
-            });
-        });
+    await student.getStudentDetails();
+    await student.getStudentProgramme();
+    await student.getStudentModules();
+    resultProgs = await programmes.getAllProgrammes();
+    console.log(student);
+    res.render('student', {'student':student, 'programmes':resultProgs});
 });
 
 // A post route to recieve new data for a students' programme
-app.post('/allocate-programme', function (req, res) {
+app.post('/allocate-programme', async function (req, res) {
     params = req.body;
     var student = new Student(params.id)
     // Adding a try/catch block which will be useful later when we add to the database
     try {
-        student.updateStudentProgramme(params.programme).then(result => {
-            res.redirect('/single-student/' + params.id);
-        })
+         await student.updateStudentProgramme(params.programme);
+         res.redirect('/single-student/' + params.id);
      } catch (err) {
          console.error(`Error while adding programme `, err.message);
      }
 });
 
-app.post('/add-note', function (req, res) {
+app.post('/add-note', async function (req, res) {
     params = req.body;
     var student = new Student(params.id)
     // Adding a try/catch block which will be useful later when we add to the database
     try {
-        student.addStudentNote(params.note).then(result => {
-            res.redirect('/single-student/' + params.id);
-        })
+        await student.addStudentNote(params.note);
+         res.redirect('/single-student/' + params.id);
      } catch (err) {
          console.error(`Error while adding note `, err.message);
      }
@@ -115,59 +109,56 @@ app.get('/register', function (req, res) {
     res.render('register');   
 });
 
-app.post('/set-password', function (req, res) {
-    params = req.body;
-    var user = new User(params.email);
-    try {
-        user.getIdFromEmail().then( uId => {
-            if(uId) {
-                 // If a valid, existing user is found, set the password and redirect to the users single-student page
-                user.setUserPassword(params.password).then ( result => {
-                    res.redirect('/single-student/' + uId);
-                });
-            }
-            else {
-                // If no existing user is found, add a new one
-                user.addUser(params.email).then( Promise => {
-                    res.send('Perhaps a page where a new user sets a programme would be good here');
-                });
-            }
-        })
-     } catch (err) {
-         console.error(`Error while adding password `, err.message);
-     }
-});
+
 
 // Login Form
 app.get('/login', function (req, res) {
     res.render('login');
 });
 
-
-// Check submitted email and password pair
-app.post('/authenticate', function (req, res) {
+app.post('/set-password', async function (req, res) {
     params = req.body;
     var user = new User(params.email);
     try {
-        user.getIdFromEmail().then(uId => {
-            if (uId) {
-                user.authenticate(params.password).then(match => {
-                    if (match) {
-                        req.session.uid = uId;
-                        req.session.loggedIn = true;
-                        console.log(req.session);
-                        res.redirect('/single-student/' + uId);
-                    }
-                    else {
-                        // TODO improve the user journey here
-                        res.send('invalid password');
-                    }
-                });
+        uId = await user.getIdFromEmail();
+        if (uId) {
+            // If a valid, existing user is found, set the password and redirect to the users single-student page
+            await user.setUserPassword(params.password);
+            console.log(req.session.id);
+            res.send('Password set successfully');
+        }
+        else {
+            // If no existing user is found, add a new one
+            newId = await user.addUser(params.email);
+            res.send('Perhaps a page where a new user sets a programme would be good here');
+        }
+    } catch (err) {
+        console.error(`Error while adding password `, err.message);
+    }
+});
+
+// Check submitted email and password pair
+app.post('/authenticate', async function (req, res) {
+    params = req.body;
+    var user = new User(params.email);
+    try {
+        uId = await user.getIdFromEmail();
+        if (uId) {
+            match = await user.authenticate(params.password);
+            if (match) {
+                req.session.uid = uId;
+                req.session.loggedIn = true;
+                console.log(req.session.id);
+                res.redirect('/single-student/' + uId);
             }
             else {
-                res.send('invalid email');
+                // TODO improve the user journey here
+                res.send('invalid password');
             }
-        })
+        }
+        else {
+            res.send('invalid email');
+        }
     } catch (err) {
         console.error(`Error while comparing `, err.message);
     }
